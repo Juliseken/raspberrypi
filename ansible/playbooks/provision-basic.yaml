@@ -1,0 +1,138 @@
+---
+
+- name: Basic provisioning
+  hosts: raspberrypi
+  vars_files: ../vars/provision-basic
+  tasks:
+    - name: ping
+      ping:
+      tags: dry-run
+
+    - name: apt update
+      become: true
+      apt:
+        update_cache: true
+
+    - name: apt upgrade
+      become: true
+      apt:
+        upgrade: true
+
+    - name: mount external drive
+      become: true
+      mount:
+        src: '{{ external_drive_name }}'
+        path: '{{ external_drive_mountpoint }}'
+        state: mounted
+        boot: true
+        fstype: ext4
+
+    - name: set standard editor to vim
+      become: true
+      lineinfile:
+        path: /etc/environment
+        state: present
+        create: true
+        line: "{{ item }}"
+      loop:
+        - 'EDITOR=/usr/bin/vim'
+        - 'VISUAL=/usr/bin/vim'
+
+    - name: Allow the user to run sudo without a password
+      become: true
+      copy:
+        dest: /etc/sudoers.d/{{ ansible_user }}
+        content: "{{ ansible_user }} ALL=(ALL) NOPASSWD:ALL"
+        owner: root
+        group: root
+        mode: '0440'
+
+    - name: install cifs-utils
+      become: true
+      package:
+        name: cifs-utils
+        state: present
+
+    - name: install samba
+      become: true
+      package:
+        name: samba
+        state: present
+
+    - name: Add samba shares
+      become: true
+      blockinfile:
+        path: /etc/samba/smb.conf
+        state: present
+        marker_begin: BEGIN {{ item }}
+        marker_end: END {{ item }}
+        block: |
+          [{{ item }}]
+          path = {{ samba.root_path }}/{{ item }}
+          browseable = yes
+          writable = yes
+          valid users = @sambashare
+          create mask = 0775
+          directory mask = 0775
+      loop: '{{ samba.share_names }}'
+
+    - name: Restart Samba service to apply changes
+      become: true
+      service:
+        name: smbd
+        state: restarted
+        enabled: true
+
+    - name: Add {{ user }} to group sambashare
+      become: true
+      user:
+        name: '{{ user }}'
+        groups: sambashare
+        append: true
+    
+    - name: Remove samba user {{ user }}
+      become: true
+      shell: smbpasswd -x {{ user }}
+      register: result
+      failed_when: result.rc not in [0, 1]
+
+    - name: Set the samba password for {{ user }}
+      become: true
+      expect:
+        command: smbpasswd -a {{ user }}
+        responses:
+          'New SMB password:': "{{ samba.password }}"
+          'Retype new SMB password:': "{{ samba.password }}"
+
+    - name: Enable the Samba user {{ user }}
+      become: yes
+      command: smbpasswd -e {{ user }}
+
+    - name: Create {{ remote_share.mountpoint }}
+      become: true
+      file:
+        path: '{{ remote_share.mountpoint }}'
+        state: directory
+        mode: '0755'
+        owner: '{{ user }}'
+        group: '{{ group }}'
+
+    - name: Create credentialsfile
+      copy:
+        dest: '{{ remote_share.credentialsfile }}'
+        content: |
+          username={{ user }}
+          password={{ remote_share.password }}
+        owner: '{{ user }}'
+        group: '{{ group }}'
+        mode: '0400'
+
+    - name: Mount remote share
+      become: true
+      mount:
+        src: '{{ remote_share.src }}'
+        path: '{{ remote_share.mountpoint }}'
+        fstype: cifs
+        opts: _netdev,iocharset=utf8,vers=3.0,nofail,uid={{ user }},gid={{ group }},file_mode=0770,dir_mode=0770,noserverino,credentials={{ remote_share.credentialsfile }}
+        state: mounted
+        boot: true

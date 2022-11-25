@@ -1,0 +1,35 @@
+---
+
+services:
+  web:
+    image: "nextcloud:20.0.3"
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - web:/var/www/html
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB={{ postgres_db }}
+      - POSTGRES_USER={{ postgres_user }}
+      - POSTGRES_PASSWORD={{ postgres_password }}
+      - NEXTCLOUD_ADMIN_PASSWORD={{ nextcloud_admin_password }}
+      - NEXTCLOUD_ADMIN_USER={{ nextcloud_admin_user }}
+      - NEXTCLOUD_TRUSTED_DOMAINS={{ nextcloud_trusted_domains }}
+    links:
+      - db
+  db:
+    image: "postgres:13.4"
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB={{ postgres_db }}
+      - POSTGRES_USER={{ postgres_user }}
+      - POSTGRES_PASSWORD={{ postgres_password }}
+
+volumes:
+    db:
+    web:

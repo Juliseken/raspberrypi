@@ -1,0 +1,10 @@
+#/bin/bash
+
+BORG_REPO={{ borg_repository }}
+export BORG_PASSCOMMAND="{{ borg_passcommand }}"
+
+mountpoint={{ borg_mountpoint }}
+
+borg mount \
+  ${BORG_REPO} \
+  ${mountpoint}

@@ -1,0 +1,51 @@
+---
+
+- name: deploy monitoring stack with prometheus and grafana
+  hosts: raspberrypi
+  tasks:
+  - name: create kubernetes manifests dir
+    become: true
+    file:
+      path: /etc/kubernetes
+      state: directory
+      group: julian
+      owner: julian
+
+  - name: rsync kubernetes files to target machine
+    synchronize:
+      src: '{{ playbook_dir }}/{{ item }}'
+      dest: /etc/kubernetes/
+    loop:
+    - grafana
+    - kubernetes
+    - prometheus
+
+  - name: copy encrypted files
+    copy:
+      src: '{{ playbook_dir }}/{{ item }}'
+      dest: /etc/kubernetes/{{ item }}
+    loop:
+    - grafana/dashboards/host-monitoring.json
+
+  - name: delete Namespace monitoring if present
+    shell: kubectl delete namespace monitoring
+    register: output
+    failed_when: output.rc not in [0, 1]
+
+  - name: apply Namespace monitoring
+    shell: kubectl apply -f /etc/kubernetes/kubernetes/monitoring-namespace.yml
+
+  - name: apply Config-Maps
+    shell: kubectl apply -k /etc/kubernetes/{{ item }} --namespace monitoring
+    loop:
+    - grafana/dashboards/
+    - grafana/dashboards-provider/
+    - grafana/grafana-ini/
+    - grafana/prometheus-datasource/
+    - prometheus/prometheus-config/
+
+  - name: apply manifests
+    shell: kubectl apply -f /etc/kubernetes/kubernetes/{{ item }} --namespace monitoring
+    loop:
+    - prometheus.yml
+    - grafana.yml

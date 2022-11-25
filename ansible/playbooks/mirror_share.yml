@@ -1,0 +1,6 @@
+---
+
+- hosts: raspberrypi
+  roles:
+     - role: mirror_share
+  vars_files: ../vars/mirror_share

@@ -1,0 +1,21 @@
+---
+
+- name: uninstall kubernetes
+  hosts: raspberrypi
+  tasks:
+    - name: k3s uninstall
+      become: true
+      shell: /usr/local/bin/k3s-uninstall.sh
+      register: k3s_uninstall_output
+
+    - name: print k3s-install.sh output
+      debug:
+        msg: '{{ k3s_uninstall_output }}'
+
+    - name: disable control groups
+      become: true
+      lineinfile:
+        path: /boot/cmdline.txt
+        regex: (.*) cgroup_memory=1 cgroup_enable=memory(.*)
+        line: \1\2
+        backrefs: true

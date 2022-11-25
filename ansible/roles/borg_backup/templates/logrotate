@@ -1,0 +1,6 @@
+{{ borg_create_log_file }} {
+  daily
+  create 0640 {{ borg_group_id }} {{ borg_user_id }}
+  dateext dateformat .%Y-%m-%d
+  rotate 62
+}

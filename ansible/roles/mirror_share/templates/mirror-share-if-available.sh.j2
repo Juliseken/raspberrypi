@@ -1,0 +1,122 @@
+#!/bin/bash
+
+# general script config
+HOME={{ mirror_share_home }}
+pid_file={{ mirror_share_pid_file }}
+
+# share config
+interfaces="{{ mirror_share_interfaces }}"
+share={{ mirror_share_name }}
+mountpoint={{ mirror_share_mountpoint }}
+credentialsFile={{ mirror_share_credentials_file }}
+
+# rsync config
+excludes="" # --exclude AlteFestplatten --exclude Band --exclude Bilder --exclude dev --exclude Musik --exclude Spiele --exclude Studium --exclude Videos"
+source=${mountpoint} #could be your full share or a subfolder of your share like: /mnt/winshare/mySubFolder
+destination={{ mirror_share_destination }}
+#options="--archive --verbose --delete --bwlimit=1024" #archive and verbose - see rsync help for more
+options="--archive --verbose --delete" #archive and verbose - see rsync help for more
+mount_options=_netdev,iocharset=utf8,vers=3.0,nofail,uid={{ mirror_share_user_id }},gid={{ mirror_share_group_id }},file_mode=0770,dir_mode=0770,credentials=${credentialsFile}
+
+# mirror interval config
+last_mirror_status_file={{ mirror_share_last_mirror_status_file }}
+mirror_interval_minutes=60
+
+# if the last succesful mirror is older then mirror_age_alert_days fire an alert
+mirror_age_alert_days=7
+mirror_age_alert_minutes=$((${mirror_age_alert_days} * 24 * 60))
+alert_fired_file={{ mirror_share_alert_fired_file }}
+
+# utility functions
+function log {
+  echo $(date --iso-8601=minutes) [$$] ${1}
+}
+
+function fileIsOlderThan {
+  local file=${1}
+  local age_minutes=${2}
+  [[ "$(find ${file} -mmin +${age_minutes})" ]]
+}
+
+function fileDoesNotExist {
+  local file=${1}
+  ! [[ -f ${file} ]]
+}
+
+function isScriptAlreadyRunning {
+  local pid_file=${1}
+  # https://unix.stackexchange.com/questions/169898/what-does-kill-0-do
+  [[ -f ${pid_file} ]] && kill -0 $(cat ${pid_file}) 2>/dev/null
+}
+
+function isMounted {
+  local unc_path=${1}
+  local mountpoint=${2}
+  grep -qs "${unc_path}.*${mountpoint}" /proc/mounts
+}
+
+function alertIfNeeded {
+  if fileDoesNotExist ${last_mirror_status_file} || fileIsOlderThan ${last_mirror_status_file} ${mirror_age_alert_minutes}; then
+    if fileDoesNotExist ${alert_fired_file}; then
+      log "Last successful mirror is older than ${mirror_age_alert_days} days. Fire alert."
+      {{ mirror_share_alert_command }} "Last successful mirror is older than ${mirror_age_alert_days} days."
+      touch ${alert_fired_file}
+    else
+      log "Last successful mirror is older than ${mirror_age_alert_days} days.  Alert already fired."
+    fi
+  fi
+}
+
+# script logic
+
+RC=0
+
+if ! isScriptAlreadyRunning ${pid_file}; then
+  echo $$ > ${pid_file}
+  log "Check if last successful mirror is older than ${mirror_interval_minutes} minutes."
+  if fileDoesNotExist ${last_mirror_status_file} || fileIsOlderThan ${last_mirror_status_file} ${mirror_interval_minutes}; then
+    log "Last successful mirror is older than ${mirror_interval_minutes} minutes. Trying to update it."
+    log "Check if at least one interface of ${interfaces} is reachable."
+    some_interface_is_reachable=false
+    for interface in ${interfaces}; do
+      log "pinging interface ${interface}"
+      if ping -c 1 ${interface} &> /dev/null; then
+        log "interface ${interface} is reachable"
+        some_interface_is_reachable=true
+        break
+      else
+        log "interface ${interface} down"
+      fi
+    done
+    if ${some_interface_is_reachable}; then
+      if [ ! -d ${mountpoint} ]; then
+        mkdir -p ${mountpoint}
+      fi
+      log "Mounting share //${interface}/${share}/ at ${mountpoint} if available and not already mounted"
+      if isMounted //${interface}/${share}/ ${mountpoint} || sudo mount -t cifs -o ${mount_options} //${interface}/${share}/ ${mountpoint}; then
+        log "share //${interface}/${share}/ is available and mounted at ${mountpoint}"
+        log "rsync ${options} ${excludes} ${source} ${destination}"
+        rsync ${options} ${excludes} ${source} ${destination}
+        RC=${?}
+        log "rsync exited with exit code ${RC}"
+        if [[ ${RC} == 0 ]]; then
+          touch ${last_mirror_status_file}
+          rm -f ${alert_fired_file}
+        fi
+        log "unmount share //${interface}/${share}/ from mountpoint ${mountpoint}"
+        sudo umount -l ${mountpoint}
+      else
+        log "//${interface}/${share}/ not available - skipped"
+      fi
+    else
+      log "Non of the interfaces ${interfaces} is reachable - skipped"
+    fi
+  else
+    log "Last successful mirror is younger than ${mirror_interval_minutes} minutes. No need to update the mirror."
+  fi
+  rm -f ${pid_file}
+else
+  log "${0} is already running."
+fi
+
+alertIfNeeded

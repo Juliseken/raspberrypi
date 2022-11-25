@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# https://borgbackup.readthedocs.io/en/stable/quickstart.html#automating-backups
+
+# Setting this, so the repo does not need to be given on the commandline:
+export BORG_REPO={{ borg_repository }}
+
+# See the section "Passphrase notes" for more infos.
+export BORG_PASSCOMMAND="{{ borg_passcommand }}"
+
+# the archive and its prefix
+archive_prefix={{ borg_archive_prefix }}
+archive=${archive_prefix}{now:%Y-%m-%dT%H-%M-%S}
+
+# base directory for the paths to be backed up
+source_base_dir={{ borg_source_directory }}
+
+# path to be backed up
+source=.
+
+# some helpers and error handling:
+info() { printf "\n%s %s\n\n" "$(date --rfc-3339=seconds) [$$]" "$*" >&2; }
+trap 'echo $( date ) Backup interrupted >&2; exit 2' INT TERM
+
+info "Starting backup"
+
+# Backup the most important directories into an archive named after
+# the machine this script is currently running on:
+
+pushd ${source_base_dir}
+borg create                         \
+    --verbose                       \
+    --filter AMEx                   \
+    --list                          \
+    --stats                         \
+    --show-rc                       \
+    --compression lz4               \
+    --exclude-caches                \
+    ::${archive}                    \
+    ${source}
+
+backup_exit=$?
+
+popd
+
+info "Pruning repository"
+
+# Use the `prune` subcommand to maintain 1 daily
+# archive of the archive prefixed ${archive_prefix}.
+
+borg prune                                  \
+    --list                                  \
+    --glob-archives "${archive_prefix}*"    \
+    --show-rc                               \
+    --keep-daily    {{ borg_keep.daily }}                       \
+    --keep-weekly   {{ borg_keep.weekly }}                       \
+    --keep-monthly  {{ borg_keep.monthly }}
+
+prune_exit=$?
+
+# use highest exit code as global exit code
+global_exit=$(( backup_exit > prune_exit ? backup_exit : prune_exit ))
+
+if [ ${global_exit} -eq 0 ]; then
+    info "Backup and Prune finished successfully"
+    # only report success on sunday
+    if [ $(date +%u) -eq 7 ]; then
+      {{ borg_alert_command }} "INFO: Backup {{ borg_backup_name }} and Prune finished successfully"
+    fi
+elif [ ${global_exit} -eq 1 ]; then
+    info "Backup and/or Prune finished with warnings"
+    {{ borg_alert_command }} "WARN: Backup {{ borg_backup_name }} and/or Prune finished with warnings"
+else
+    info "Backup and/or Prune finished with errors"
+    {{ borg_alert_command }} "ERROR: Backup {{ borg_backup_name }} and/or Prune finished with errors"
+fi
+
+exit ${global_exit}

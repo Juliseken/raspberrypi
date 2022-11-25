@@ -1,0 +1,6 @@
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+- name: grafana-dashboards-provider
+  files:
+  - dashboards-provider.yml

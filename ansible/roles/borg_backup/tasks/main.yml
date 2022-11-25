@@ -1,0 +1,65 @@
+---
+# tasks file for borg_backup
+
+- name: install Borg Backup
+  become: true
+  apt:
+    name: borgbackup={{ borg_version }}
+    state: present
+
+- name: install python3-pyfuse3
+  become: true
+  package:
+    name: python3-pyfuse3
+    state: present
+
+- name: Create directory structure
+  loop:
+    - '{{ borg_bin_dir }}'
+    - '{{ borg_log_dir }}'
+  file:
+    path: '{{ item }}'
+    state: directory
+
+- name: Create {{ borg_passphrase_file }}
+  copy:
+    dest: '{{ borg_passphrase_file }}'
+    content: '{{ borg_passphrase }}'
+    mode: 0400
+
+- name: copy borg scripts to {{ borg_bin_dir }} target machine
+  template:
+    src: '{{ role_path }}/templates/{{ item.script }}.sh.j2'
+    dest: '{{ borg_bin_dir }}/{{ item.script }}-{{ borg_backup_name }}.sh'
+    mode: '{{ item.mode }}'
+  loop:
+    - script: borg-create
+      mode: '740'
+    - script: borg-info
+      mode: '740'
+    - script: borg-list
+      mode: '740'
+    - script: borg-mount
+      mode: '740'
+    - script: borg-umount
+      mode: '740'
+    - script: borg-delete
+      mode: '640'
+    - script: borg-init
+      mode: '640'
+
+- name: integrate logrotate block into logrotate configuration
+  become: true
+  blockinfile:
+    path: '{{ borg_create_logrotate_file }}'
+    block: "{{ lookup('template', role_path + '/templates/logrotate') }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ role_name }} {{ borg_backup_name }}"
+    create: true
+
+- name: add borg-create.sh to crontab
+  cron:
+    name: '{{ role_name }}_{{ borg_backup_name }}'
+    job: '{{ borg_bin_dir }}/borg-create-{{ borg_backup_name }}.sh >> {{ borg_create_log_file }} 2>&1'
+    user: '{{ borg_user_id }}'
+    hour: '{{ borg_backup_create_hour }}'
+    minute: '{{ borg_backup_create_minute }}'

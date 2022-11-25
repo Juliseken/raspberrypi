@@ -1,0 +1,59 @@
+---
+
+- name: install k3s
+  hosts: raspberrypi
+  tasks:
+    - name: check if control groups are enabled
+      shell: grep -q cgroup /boot/cmdline.txt
+      register: cgroup_active
+      failed_when: cgroup_active.rc not in [0, 1]
+
+    - name: enable control groups
+      when: cgroup_active.rc != 0
+      become: true
+      lineinfile:
+        path: /boot/cmdline.txt
+        regex: (.*)
+        line: \1 cgroup_memory=1 cgroup_enable=memory
+        backrefs: true
+
+    - when: cgroup_active.rc == 0
+      block:
+
+        - name: download k3s installer
+          get_url:
+            url: https://get.k3s.io
+            dest: ./k3s-install.sh
+            mode: '740'
+
+        - name: k3s install
+          shell: ./k3s-install.sh --disable traefik
+          register: k3s_install_output
+
+        - name: print k3s-install.sh output
+          debug:
+            msg: '{{ k3s_install_output }}'
+
+        - name: remove k3s installer
+          file:
+            path: ./k3s-install.sh
+            state: absent
+
+        - name: make k3s executable for julian:julian
+          become: true
+          file:
+            path: /etc/rancher/k3s/k3s.yaml
+            owner: julian
+            group: julian
+
+        - name: install nginx ingress controller
+          shell: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.5.1/deploy/static/provider/cloud/deploy.yaml
+          register: nginx_install_output
+
+        - name: print nginx install output
+          debug:
+            msg: '{{ nginx_install_output }}'
+
+    - when: cgroup_active.rc != 0
+      debug:
+        msg: croups have been activated. Reboot the machine and execute this role again.

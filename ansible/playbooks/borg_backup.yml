@@ -1,0 +1,13 @@
+---
+
+- name: install borg backup scripts for backup local
+  hosts: raspberrypi
+  roles:
+    - role: borg_backup
+  vars_files: ../vars/borg_backup_local
+
+- name: install borg backup scripts for backup offshore
+  hosts: raspberrypi
+  roles:
+    - role: borg_backup
+  vars_files: ../vars/borg_backup_offshore
