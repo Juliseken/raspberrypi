@@ -1,0 +1,6 @@
+{{ mirror_share_log_file }} {
+  daily
+  create 0640 {{ mirror_share_group_id }} {{ mirror_share_user_id }}
+  dateext dateformat .%Y-%m-%d
+  rotate 7
+}

@@ -6,3 +6,10 @@
     src: '{{ role_path }}/templates/mirror-share-if-available.sh.j2'
     dest: '{{ mirror_share_bin_directory }}/mirror-share-if-available.sh'
     mode: '740'
+
+- name: integrate logrotate block into logrotate configuration
+  blockinfile:
+    path: '{{ mirror_share_logrotate_file }}'
+    block: "{{ lookup('template', role_path + '/templates/logrotate') }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ role_name }}"
+    create: true
