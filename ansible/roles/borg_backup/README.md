@@ -41,3 +41,8 @@ Including an example of how to use your role (for instance, with variables passe
           daily: 7
           weekly: 2
           monthly: 2
+
+Execute Role
+----------------
+
+    raspberrypi/ansible $ ansible-playbook playbooks/borg_backup.yml
