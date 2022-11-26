@@ -19,7 +19,9 @@
       weekly: 2
       monthly: 2
     borg_create_log_file: '{{ borg_home }}/var/log/borg/borg-create-{{ borg_backup_name }}.log'
+    borg_create_logrotate_file: /etc/logrotate.d/julian
     borg_user_id: julian
+    borg_group_id: julian
     borg_backup_create_hour: 3
     borg_backup_create_minute: 0
 
@@ -42,6 +44,8 @@
       weekly: 2
       monthly: 0
     borg_create_log_file: '{{ borg_home }}/var/log/borg/borg-create-{{ borg_backup_name }}.log'
+    borg_create_logrotate_file: /etc/logrotate.d/julian
     borg_user_id: julian
+    borg_group_id: julian
     borg_backup_create_hour: 4
     borg_backup_create_minute: 0
