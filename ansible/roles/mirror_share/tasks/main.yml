@@ -13,3 +13,9 @@
     block: "{{ lookup('template', role_path + '/templates/logrotate') }}"
     marker: "# {mark} ANSIBLE MANAGED BLOCK {{ role_name }}"
     create: true
+
+- name: add mirror-share-if-available.sh to crontab
+  cron:
+    name: '{{ role_name }}'
+    job: '{{ mirror_share_bin_directory }}/mirror-share-if-available.sh >> {{ mirror_share_log_file }} 2>&1'
+    user: '{{ mirror_share_user_id }}'
