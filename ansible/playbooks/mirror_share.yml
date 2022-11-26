@@ -1,0 +1,16 @@
+---
+
+- hosts: localhost
+  roles:
+     - role: roles/mirror_share
+  vars:
+    mirror_share_home: /srv/dev-disk-by-label-data/home/julian
+    mirror_share_bin_directory: '{{ mirror_share_home }}/bin'
+    mirror_share_host: julian-pc.fritz.box
+    mirror_share_name: home
+    mirror_share_mountpoint: /mnt/julian-pc/Home
+    mirror_share_credentials_file: '{{ mirror_share_home }}/.cifscredentials-julian-pc-home'
+    mirror_share_destination: /srv/dev-disk-by-label-data/spiegel/julian-pc
+    mirror_share_user_id: julian
+    mirror_share_group_id: julian
+    mirror_share_alert_command: '{{ mirror_share_home }}/bin/nextcloud-talk-alert.sh'

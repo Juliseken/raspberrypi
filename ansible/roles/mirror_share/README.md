@@ -1,38 +1,34 @@
-Role Name
+mirror_share
 =========
 
-A brief description of the role goes here.
-
-Requirements
-------------
-
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+This role installs a script for mirroring data via rsync from a share to a directory.
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
-
-Dependencies
-------------
-
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+    mirror_share_home: /home/dir
+    mirror_share_host: the-host
+    mirror_share_name: the share name
+    mirror_share_mountpoint: /the/mountpoint
+    mirror_share_credentials_file: /the/credentials/file
+    mirror_share_destination: /the/destination/directory
+    mirror_share_user_id: theuser
+    mirror_share_group_id: thegroup
+    mirror_share_alert_command: the-alert-command
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
+    - hosts: localhost
       roles:
-         - { role: username.rolename, x: 42 }
-
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+        - role: roles/mirror_share
+      vars:
+        mirror_share_home: /home/dir
+        mirror_share_host: the-host
+        mirror_share_name: the share name
+        mirror_share_mountpoint: /the/mountpoint
+        mirror_share_credentials_file: /the/credentials/file
+        mirror_share_destination: /the/destination/directory
+        mirror_share_user_id: theuser
+        mirror_share_group_id: thegroup
+        mirror_share_alert_command: the-alert-command

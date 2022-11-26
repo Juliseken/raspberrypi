@@ -1,2 +1,8 @@
 ---
 # tasks file for mirror_share
+
+- name: copy mirror-share-if-available.sh to {{ mirror_share_bin_directory }}
+  template:
+    src: '{{ role_path }}/templates/mirror-share-if-available.sh.j2'
+    dest: '{{ mirror_share_bin_directory }}/mirror-share-if-available.sh'
+    mode: '740'
