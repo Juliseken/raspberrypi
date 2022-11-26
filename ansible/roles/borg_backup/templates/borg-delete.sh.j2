@@ -1,0 +1,12 @@
+#!/bin/bash
+
+export BORG_REPO={{ borg_repository }}
+export BORG_PASSCOMMAND="{{ borg_passcommand }}"
+
+archive=${1}
+
+if [[ -z ${archive} ]]; then
+  borg delete
+else
+  borg delete ::${archive}
+fi
