@@ -6,7 +6,8 @@ This role installs some borg backup utility scripts on the target machine.
 Role Variables
 --------------
 
-    borg_bin_dir: /home/bin
+    borg_home: ~
+    borg_bin_dir: '{{ borg_home }}/bin'
     borg_backup_name: local
     borg_source_directory: /the/source/dir
     borg_repository: /the/borg/repository
@@ -18,6 +19,10 @@ Role Variables
       daily: 7
       weekly: 2
       monthly: 2
+    borg_create_log_file: /the/log/file.log
+    borg_user_id: theuserid
+    borg_backup_create_hour: 3
+    borg_backup_create_minute: 0
 
 Example Playbook
 ----------------
@@ -29,7 +34,8 @@ Including an example of how to use your role (for instance, with variables passe
       roles:
          - role: roles/borg_backup
       vars:
-        borg_bin_dir: /home/bin
+        borg_home: ~
+        borg_bin_dir: '{{ borg_home }}/bin'
         borg_backup_name: local
         borg_source_directory: /the/source/dir
         borg_repository: /the/borg/repository
@@ -41,6 +47,10 @@ Including an example of how to use your role (for instance, with variables passe
           daily: 7
           weekly: 2
           monthly: 2
+        borg_create_log_file: /the/log/file.log
+        borg_user_id: theuserid
+        borg_backup_create_hour: 3
+        borg_backup_create_minute: 0
 
 Execute Role
 ----------------

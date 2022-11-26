@@ -21,3 +21,11 @@
       mode: '640'
     - script: borg-init
       mode: '640'
+
+- name: add borg-create.sh to crontab
+  cron:
+    name: '{{ role_name }}_{{ borg_backup_name }}'
+    job: '{{ borg_bin_dir }}/borg-create-{{ borg_backup_name }}.sh >> {{ borg_create_log_file }} 2>&1'
+    user: '{{ borg_user_id }}'
+    hour: '{{ borg_backup_create_hour }}'
+    minute: '{{ borg_backup_create_minute }}'
