@@ -20,7 +20,9 @@ Role Variables
       weekly: 2
       monthly: 2
     borg_create_log_file: /the/log/file.log
+    borg_create_logrotate_file: /etc/logrotate.d/the-logrotate-file
     borg_user_id: theuserid
+    borg_group_id: thegroupid
     borg_backup_create_hour: 3
     borg_backup_create_minute: 0
 
@@ -48,7 +50,9 @@ Including an example of how to use your role (for instance, with variables passe
           weekly: 2
           monthly: 2
         borg_create_log_file: /the/log/file.log
+        borg_create_logrotate_file: /etc/logrotate.d/the-logrotate-file
         borg_user_id: theuserid
+        borg_group_id: thegroupid
         borg_backup_create_hour: 3
         borg_backup_create_minute: 0
 

@@ -22,6 +22,13 @@
     - script: borg-init
       mode: '640'
 
+- name: integrate logrotate block into logrotate configuration
+  blockinfile:
+    path: '{{ borg_create_logrotate_file }}'
+    block: "{{ lookup('template', role_path + '/templates/logrotate') }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ role_name }} {{ borg_backup_name }}"
+    create: true
+
 - name: add borg-create.sh to crontab
   cron:
     name: '{{ role_name }}_{{ borg_backup_name }}'
