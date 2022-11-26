@@ -15,6 +15,8 @@ Role Variables
     mirror_share_user_id: theuser
     mirror_share_group_id: thegroup
     mirror_share_alert_command: the-alert-command
+    mirror_share_log_file: /the/log/file
+    mirror_share_logrotate_file: /etc/logrotate.d/the-logrotate-file
 
 Example Playbook
 ----------------
@@ -32,3 +34,5 @@ Example Playbook
         mirror_share_user_id: theuser
         mirror_share_group_id: thegroup
         mirror_share_alert_command: the-alert-command
+        mirror_share_log_file: /the/log/file
+        mirror_share_logrotate_file: /etc/logrotate.d/the-logrotate-file

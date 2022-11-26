@@ -14,3 +14,5 @@
     mirror_share_user_id: julian
     mirror_share_group_id: julian
     mirror_share_alert_command: '{{ mirror_share_home }}/bin/nextcloud-talk-alert.sh'
+    mirror_share_log_file: '{{ mirror_share_home }}/var/log/mirror-share-if-available/mirror-share-if-available.log'
+    mirror_share_logrotate_file: /etc/logrotate.d/julian
