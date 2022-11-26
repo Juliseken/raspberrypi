@@ -1,0 +1,11 @@
+#!/bin/bash
+
+BORG_REPO={{ borg_repository }}
+
+borg init \
+  --encryption repokey \
+  --make-parent-dirs \
+  --info \
+  --progress \
+  --show-rc \
+  ${BORG_REPO}

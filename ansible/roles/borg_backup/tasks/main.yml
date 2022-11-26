@@ -1,0 +1,23 @@
+---
+# tasks file for borg_backup
+
+- name: copy borg scripts to {{ borg_bin_dir }} target machine
+  template:
+    src: '{{ role_path }}/templates/{{ item.script }}.sh.j2'
+    dest: '{{ borg_bin_dir }}/{{ item.script }}-{{ borg_backup_name }}.sh'
+    mode: '{{ item.mode }}'
+  loop:
+    - script: borg-create
+      mode: '740'
+    - script: borg-info
+      mode: '740'
+    - script: borg-list
+      mode: '740'
+    - script: borg-mount
+      mode: '740'
+    - script: borg-umount
+      mode: '740'
+    - script: borg-delete
+      mode: '640'
+    - script: borg-init
+      mode: '640'
