@@ -23,6 +23,7 @@
       mode: '640'
 
 - name: integrate logrotate block into logrotate configuration
+  become: true
   blockinfile:
     path: '{{ borg_create_logrotate_file }}'
     block: "{{ lookup('template', role_path + '/templates/logrotate') }}"

@@ -8,6 +8,7 @@
     mode: '740'
 
 - name: integrate logrotate block into logrotate configuration
+  become: true
   blockinfile:
     path: '{{ mirror_share_logrotate_file }}'
     block: "{{ lookup('template', role_path + '/templates/logrotate') }}"
