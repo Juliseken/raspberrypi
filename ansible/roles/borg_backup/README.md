@@ -1,11 +1,12 @@
 borg_backup
 =========
 
-This role installs some borg backup utility scripts on the target machine.
+This role installs Borg Backup along with some borg backup utility scripts on the target machine.
 
 Role Variables
 --------------
 
+    borg_version: 1.1.15-3~bpo10+1
     borg_home: ~
     borg_bin_dir: '{{ borg_home }}/bin'
     borg_backup_name: local
@@ -29,13 +30,12 @@ Role Variables
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
     - name: install borg backup scripts for local backup
       hosts: localhost
       roles:
          - role: roles/borg_backup
       vars:
+        borg_version: 1.1.15-3~bpo10+1
         borg_home: ~
         borg_bin_dir: '{{ borg_home }}/bin'
         borg_backup_name: local

@@ -1,6 +1,12 @@
 ---
 # tasks file for borg_backup
 
+- name: install Borg Backup
+  become: true
+  apt:
+    name: borgbackup={{ borg_version }}
+    state: present
+
 - name: copy borg scripts to {{ borg_bin_dir }} target machine
   template:
     src: '{{ role_path }}/templates/{{ item.script }}.sh.j2'

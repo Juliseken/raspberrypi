@@ -5,6 +5,7 @@
   roles:
     - role: borg_backup
   vars:
+    borg_version: 1.1.15-3~bpo10+1
     borg_home: /srv/dev-disk-by-label-data/home/julian
     borg_bin_dir: '{{ borg_home }}/bin'
     borg_backup_name: local
@@ -30,6 +31,7 @@
   roles:
     - role: borg_backup
   vars:
+    borg_version: 1.1.15-3~bpo10+1
     borg_home: /srv/dev-disk-by-label-data/home/julian
     borg_bin_dir: '{{ borg_home }}/bin'
     borg_backup_name: offshore
