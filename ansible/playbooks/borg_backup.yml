@@ -3,7 +3,7 @@
 - name: install borg backup scripts for backup local
   hosts: localhost
   roles:
-    - role: roles/borg_backup
+    - role: borg_backup
   vars:
     borg_home: /srv/dev-disk-by-label-data/home/julian
     borg_bin_dir: '{{ borg_home }}/bin'
@@ -28,7 +28,7 @@
 - name: install borg backup scripts for backup offshore
   hosts: localhost
   roles:
-    - role: roles/borg_backup
+    - role: borg_backup
   vars:
     borg_home: /srv/dev-disk-by-label-data/home/julian
     borg_bin_dir: '{{ borg_home }}/bin'
