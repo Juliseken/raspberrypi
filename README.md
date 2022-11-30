@@ -1,3 +1,3 @@
 # raspberrypi
 
-This repository contains different scripts used on my raspberrypi.
+This repository contains different scripts used for provisioning of a raspberrypi.
