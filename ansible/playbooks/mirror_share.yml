@@ -2,7 +2,7 @@
 
 - hosts: localhost
   roles:
-     - role: roles/mirror_share
+     - role: mirror_share
   vars:
     mirror_share_home: /srv/dev-disk-by-label-data/home/julian
     mirror_share_bin_directory: '{{ mirror_share_home }}/bin'
