@@ -1,0 +1,56 @@
+---
+
+- name: configure firewall
+  hosts: localhost
+  tasks:
+    - name: ufw install and configure
+      become: true
+      block:
+      
+      - name: ufw install
+        apt:
+          name: ufw=0.36-1
+          state: present
+      
+      - name: ufw disable
+        shell: ufw disable
+
+      - name: ufw remove all rules
+        shell: ufw reset 
+      
+      - name: ufw configure rules
+        shell: ufw allow {{ item.port }} comment {{ item.comment }}
+        loop:
+          - port: 22/tcp
+            comment: "ssh"
+          - port: 80/tcp
+            comment: "openmediavault"
+          - port: Samba
+            comment: '""'
+          - port: 8200/tcp
+            comment: "minidlna"
+          - port: 53/tcp
+            comment: "dns"
+          - port: 53/udp
+            comment: "dns"
+          - port: 67/udp
+            comment: "dhcp"
+          - port: 8081/tcp
+            comment: "pihole"
+          - port: 8444/tcp
+            comment: "pihole"
+          - port: 9100/tcp
+            comment: "node_exporter"
+          - port: 5001
+            comment: "iperf"
+
+      - name: ufw enable
+        shell: ufw --force enable
+
+      - name: ufw status
+        shell: ufw status
+        register: ufw_status
+
+      - name: ufw print rules
+        debug:
+          msg: '{{ ufw_status.stdout_lines }}'
