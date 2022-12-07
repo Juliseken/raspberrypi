@@ -1,0 +1,26 @@
+---
+
+- name: deploy monitoring stack with prometheus and grafana
+  hosts: localhost
+  tasks:
+  - name: create kubernetes manifests dir
+    become: true
+    file:
+      path: /etc/kubernetes
+      state: directory
+      group: julian
+      owner: julian
+
+  - name: copy kubernetes manifests to target machine
+    copy:
+      src: '{{ playbook_dir }}/kubernetes/{{ item }}'
+      dest: /etc/kubernetes
+    loop:
+    - prometheus.yml
+    - grafana.yml
+
+  - name: apply manifests
+    shell: kubectl apply -f /etc/kubernetes/{{ item }}
+    loop:
+    - prometheus.yml
+    - grafana.yml
