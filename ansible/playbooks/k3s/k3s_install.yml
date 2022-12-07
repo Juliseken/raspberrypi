@@ -27,7 +27,7 @@
             mode: '740'
 
         - name: k3s install
-          shell: ./k3s-install.sh
+          shell: ./k3s-install.sh --disable traefik
           register: k3s_install_output
 
         - name: print k3s-install.sh output
@@ -45,6 +45,14 @@
             path: /etc/rancher/k3s/k3s.yaml
             owner: julian
             group: julian
+
+        - name: install nginx ingress controller
+          shell: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.5.1/deploy/static/provider/cloud/deploy.yaml
+          register: nginx_install_output
+
+        - name: print nginx install output
+          debug:
+            msg: '{{ nginx_install_output }}'
 
     - when: cgroup_active.rc != 0
       debug:
