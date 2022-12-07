@@ -23,7 +23,7 @@
         loop:
           - port: 22/tcp
             comment: "ssh"
-          - port: 80/tcp
+          - port: 8082/tcp
             comment: "openmediavault"
           - port: Samba
             comment: '""'
@@ -43,6 +43,8 @@
             comment: "node_exporter"
           - port: 5001
             comment: "iperf"
+          - port: 80/tcp
+            comment: "kubernetes"
 
       - name: ufw enable
         shell: ufw --force enable
