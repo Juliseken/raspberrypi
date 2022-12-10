@@ -1,102 +1,3 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-prometheus-config
-data:
-  prometheus.yaml: |
-    apiVersion: 1
-
-    datasources:
-      - name: Prometheus
-        type: prometheus
-        url: http://prometheus-service:9090
-        jsonData:
-          httpMethod: POST
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-dashboards-provider
-data:
-  dashboards.yaml: |
-    apiVersion: 1
-
-    providers:
-      # <string> an unique provider name. Required
-      - name: 'dashboards'
-        # <int> Org id. Default to 1
-        orgId: 1
-        # <string> name of the dashboard folder.
-        folder: ''
-        # <string> folder UID. will be automatically generated if not specified
-        folderUid: ''
-        # <string> provider type. Default to 'file'
-        type: file
-        # <bool> disable dashboard deletion
-        disableDeletion: false
-        # <int> how often Grafana will scan for changed dashboards
-        updateIntervalSeconds: 10
-        # <bool> allow updating provisioned dashboards from the UI
-        allowUiUpdates: false
-        options:
-          # <string, required> path to dashboard files on disk. Required when using the 'file' type
-          path: /home/grafana
-          # <bool> use folder names from filesystem to create folders in Grafana
-          foldersFromFilesStructure: true
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-dashboard-host-monitoring
-data:
-  host-monitoring.json: |
-    {
-      "annotations": {
-        "list": [
-          {
-            "builtIn": 1,
-            "datasource": {
-              "type": "grafana",
-              "uid": "-- Grafana --"
-            },
-            "enable": true,
-            "hide": true,
-            "iconColor": "rgba(0, 211, 255, 1)",
-            "name": "Annotations & Alerts",
-            "target": {
-              "limit": 100,
-              "matchAny": false,
-              "tags": [],
-              "type": "dashboard"
-            },
-            "type": "dashboard"
-          }
-        ]
-      },
-      "editable": true,
-      "fiscalYearStartMonth": 0,
-      "graphTooltip": 0,
-      "id": 1,
-      "links": [],
-      "liveNow": false,
-      "panels": [],
-      "schemaVersion": 37,
-      "style": "dark",
-      "tags": [],
-      "templating": {
-        "list": []
-      },
-      "time": {
-        "from": "now-6h",
-        "to": "now"
-      },
-      "timepicker": {},
-      "timezone": "",
-      "title": "New dashboard",
-      "uid": "vGshZ5RRz",
-      "version": 1,
-      "weekStart": ""
-    }
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -120,22 +21,27 @@ spec:
         ports:
         - containerPort: 3000
         volumeMounts:
-        - name: grafana-prometheus-config
+        - name: grafana-prometheus-datasource
           mountPath: /etc/grafana/provisioning/datasources
         - name: grafana-dashboards-provider
           mountPath: /etc/grafana/provisioning/dashboards
         - name: grafana-dashboard-host-monitoring
           mountPath: /home/grafana
+        - name: grafana-ini
+          mountPath: /etc/grafana
       volumes:
-      - name: grafana-prometheus-config
+      - name: grafana-prometheus-datasource
         configMap:
-          name: grafana-prometheus-config
+          name: grafana-prometheus-datasource
       - name: grafana-dashboards-provider
         configMap:
           name: grafana-dashboards-provider
       - name: grafana-dashboard-host-monitoring
         configMap:
           name: grafana-dashboard-host-monitoring
+      - name: grafana-ini
+        configMap:
+          name: grafana-ini
 ---
 apiVersion: v1
 kind: Service
