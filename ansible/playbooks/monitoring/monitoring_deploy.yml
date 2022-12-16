@@ -27,8 +27,16 @@
     loop:
     - grafana/dashboards/host-monitoring.json
 
+  - name: delete Namespace monitoring if present
+    shell: kubectl delete namespace monitoring
+    register: output
+    failed_when: output.rc not in [0, 1]
+
+  - name: apply Namespace monitoring
+    shell: kubectl apply -f /etc/kubernetes/kubernetes/monitoring-namespace.yml
+
   - name: apply Config-Maps
-    shell: kubectl apply -k /etc/kubernetes/{{ item }}
+    shell: kubectl apply -k /etc/kubernetes/{{ item }} --namespace monitoring
     loop:
     - grafana/dashboards/
     - grafana/dashboards-provider/
@@ -37,7 +45,7 @@
     - prometheus/prometheus-config/
 
   - name: apply manifests
-    shell: kubectl apply -f /etc/kubernetes/kubernetes/{{ item }}
+    shell: kubectl apply -f /etc/kubernetes/kubernetes/{{ item }} --namespace monitoring
     loop:
     - prometheus.yml
     - grafana.yml
