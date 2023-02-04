@@ -6,7 +6,7 @@ HOME={{ mirror_share_home }}
 pid_file="${HOME}/var/lib/${package_name}/PID"
 
 # share config
-host={{ mirror_share_host }}
+interfaces="{{ mirror_share_interfaces }}"
 share={{ mirror_share_name }}
 mountpoint={{ mirror_share_mountpoint }}
 credentialsFile={{ mirror_share_credentials_file }}
@@ -77,15 +77,25 @@ if ! isScriptAlreadyRunning ${pid_file}; then
   log "Check if last successful mirror is older than ${mirror_interval_minutes} minutes."
   if fileDoesNotExist ${last_mirror_status_file} || fileIsOlderThan ${last_mirror_status_file} ${mirror_interval_minutes}; then
     log "Last successful mirror is older than ${mirror_interval_minutes} minutes. Trying to update it."
-    log "pinging host ${host}"
-    if ping -c 1 ${host}  &> /dev/null; then
-      log "host ${host} is reachable"
+    log "Check if at least one interface of ${interfaces} is reachable."
+    some_interface_is_reachable=false
+    for interface in ${interfaces}; do
+      log "pinging interface ${interface}"
+      if ping -c 1 ${interface} &> /dev/null; then
+        log "interface ${interface} is reachable"
+        some_interface_is_reachable=true
+        break
+      else
+        log "interface ${interface} down"
+      fi
+    done
+    if ${some_interface_is_reachable}; then
       if [ ! -d ${mountpoint} ]; then
         mkdir -p ${mountpoint}
       fi
-      log "Mounting share //${host}/${share}/ at ${mountpoint} if available and not already mounted"
-      if isMounted //${host}/${share}/ ${mountpoint} || sudo mount -t cifs -o ${mount_options} //${host}/${share}/ ${mountpoint}; then
-        log "share //${host}/${share}/ is available and mounted at ${mountpoint}"
+      log "Mounting share //${interface}/${share}/ at ${mountpoint} if available and not already mounted"
+      if isMounted //${interface}/${share}/ ${mountpoint} || sudo mount -t cifs -o ${mount_options} //${interface}/${share}/ ${mountpoint}; then
+        log "share //${interface}/${share}/ is available and mounted at ${mountpoint}"
         log "rsync ${options} ${excludes} ${source} ${destination}"
         rsync ${options} ${excludes} ${source} ${destination}
         RC=${?}
@@ -94,13 +104,13 @@ if ! isScriptAlreadyRunning ${pid_file}; then
           touch ${last_mirror_status_file}
           rm -f ${alert_fired_file}
         fi
-        log "unmount share //${host}/${share}/ from mountpoint ${mountpoint}"
+        log "unmount share //${interface}/${share}/ from mountpoint ${mountpoint}"
         sudo umount -l ${mountpoint}
       else
-        log "//${host}/${share}/ not available - skipped"
+        log "//${interface}/${share}/ not available - skipped"
       fi
     else
-      log "host ${host} down - skipped"
+      log "Non of the interfaces ${interfaces} is reachable - skipped"
     fi
   else
     log "Last successful mirror is younger than ${mirror_interval_minutes} minutes. No need to update the mirror."

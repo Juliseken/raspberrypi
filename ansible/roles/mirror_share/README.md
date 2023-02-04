@@ -7,7 +7,7 @@ Role Variables
 --------------
 
     mirror_share_home: /home/dir
-    mirror_share_host: the-host
+    mirror_share_interfaces: the-host-list
     mirror_share_name: the share name
     mirror_share_mountpoint: /the/mountpoint
     mirror_share_credentials_file: /the/credentials/file
@@ -26,7 +26,7 @@ Example Playbook
         - role: roles/mirror_share
       vars:
         mirror_share_home: /home/dir
-        mirror_share_host: the-host
+        mirror_share_interfaces: the-host-list
         mirror_share_name: the share name
         mirror_share_mountpoint: /the/mountpoint
         mirror_share_credentials_file: /the/credentials/file
