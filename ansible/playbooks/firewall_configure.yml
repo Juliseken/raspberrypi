@@ -1,7 +1,7 @@
 ---
 
 - name: configure firewall
-  hosts: localhost
+  hosts: raspberrypi
   tasks:
     - name: ufw install and configure
       become: true

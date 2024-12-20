@@ -1,7 +1,7 @@
 ---
 
 - name: uninstall kubernetes
-  hosts: localhost
+  hosts: raspberrypi
   tasks:
     - name: k3s uninstall
       become: true

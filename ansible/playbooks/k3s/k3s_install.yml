@@ -1,7 +1,7 @@
 ---
 
 - name: install k3s
-  hosts: localhost
+  hosts: raspberrypi
   tasks:
     - name: check if control groups are enabled
       shell: grep -q cgroup /boot/cmdline.txt
