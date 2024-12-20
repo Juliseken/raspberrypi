@@ -16,3 +16,12 @@
       become: true
       apt:
         upgrade: true
+
+    - name: mount external drive
+      become: true
+      mount:
+        src: /dev/sda1
+        path: /srv/dev-disk-by-label-data
+        state: mounted
+        boot: true
+        fstype: ext4
