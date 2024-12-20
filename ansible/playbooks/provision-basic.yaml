@@ -25,3 +25,29 @@
         state: mounted
         boot: true
         fstype: ext4
+
+    - name: set standard editor to vim
+      become: true
+      lineinfile:
+        path: /etc/environment
+        state: present
+        create: true
+        line: "{{ item }}"
+      loop:
+        - 'EDITOR=/usr/bin/vim'
+        - 'VISUAL=/usr/bin/vim'
+
+    - name: Allow the user to run sudo without a password
+      become: true
+      copy:
+        dest: /etc/sudoers.d/{{ ansible_user }}
+        content: "{{ ansible_user }} ALL=(ALL) NOPASSWD:ALL"
+        owner: root
+        group: root
+        mode: '0440'
+
+    - name: install cifs-utils
+      become: true
+      package:
+        name: cifs-utils
+        state: present
