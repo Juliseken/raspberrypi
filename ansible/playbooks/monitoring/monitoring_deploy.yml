@@ -1,7 +1,7 @@
 ---
 
 - name: deploy monitoring stack with prometheus and grafana
-  hosts: localhost
+  hosts: raspberrypi
   tasks:
   - name: create kubernetes manifests dir
     become: true

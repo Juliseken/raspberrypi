@@ -1,7 +1,7 @@
 ---
 
 - name: install borg backup scripts for backup local
-  hosts: localhost
+  hosts: raspberrypi
   roles:
     - role: borg_backup
   vars:
@@ -27,7 +27,7 @@
     borg_backup_create_minute: 0
 
 - name: install borg backup scripts for backup offshore
-  hosts: localhost
+  hosts: raspberrypi
   roles:
     - role: borg_backup
   vars:
