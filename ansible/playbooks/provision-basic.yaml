@@ -2,6 +2,15 @@
 
 - name: Basic provisioning
   hosts: raspberrypi
+  vars:
+    user: julian
+    samba_password: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      30336462633737623438666263613733633765393461363834666134643865353666343465616531
+      3539363665623337653131383338623331663334346561610a363034626461393063343163383133
+      64643265626430386332336461356166313761313332343333653665366265346231343138383139
+      3331616437363161310a313837663263303765373732333463306466643331613761306465396562
+      3638
   tasks:
     - name: ping
       ping:
@@ -51,3 +60,62 @@
       package:
         name: cifs-utils
         state: present
+
+    - name: install samba
+      become: true
+      package:
+        name: samba
+        state: present
+
+    - name: Add samba shares
+      become: true
+      blockinfile:
+        path: /etc/samba/smb.conf
+        state: present
+        marker_begin: BEGIN {{ item }}
+        marker_end: END {{ item }}
+        block: |
+          [{{ item }}]
+          path = /srv/dev-disk-by-label-data/{{ item }}
+          browseable = yes
+          writable = yes
+          valid users = @sambashare
+          create mask = 0775
+          directory mask = 0775
+      loop:
+        - backup
+        - home
+        - restore
+        - spiegel
+
+    - name: Restart Samba service to apply changes
+      become: true
+      service:
+        name: smbd
+        state: restarted
+        enabled: true
+
+    - name: Add {{ user }} to group sambashare
+      become: true
+      user:
+        name: '{{ user }}'
+        groups: sambashare
+        append: true
+    
+    - name: Remove samba user {{ user }}
+      become: true
+      shell: smbpasswd -x {{ user }}
+      register: result
+      failed_when: result.rc not in [0, 1]
+
+    - name: Set the samba password for {{ user }}
+      become: true
+      expect:
+        command: smbpasswd -a {{ user }}
+        responses:
+          'New SMB password:': "{{ samba_password }}"
+          'Retype new SMB password:': "{{ samba_password }}"
+
+    - name: Enable the Samba user {{ user }}
+      become: yes
+      command: smbpasswd -e {{ user }}
