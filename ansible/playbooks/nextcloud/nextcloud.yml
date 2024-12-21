@@ -1,0 +1,147 @@
+---
+
+- name: Install and configure nextcloud
+  hosts: raspberrypi
+  vars:
+    user: julian
+    group: julian
+    home: /home/julian
+    nextcloud_admin_password: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      31393637333732616163363134616564383131343430323232663430306430323138353566353362
+      6666333730353338663436316436633163353331633561630a633436653732326635396534666430
+      36353938323836323164333131393462313963613861323731353631393665623138653330303632
+      6663643131363837380a323734336530373536653338346133356239326462623938646334383163
+      64663962353037616662323530303363343534383739656239316634636435316336
+    nextcloud_admin_user: julianadm
+    postgres_db: postgres
+    postgres_password: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      31393233383037353562336564333031623138316533653731323436313839663434613037333335
+      6139396563306661373432353466663234636561613765310a643937316438326462316638613166
+      30656364386233313762623563356463626537613065623631626565333337653636333535346539
+      3430643532613332320a376662306362376633613138326631646133333931383165626237326234
+      31343931646334656462316661623762643232353265633761333737353735383731
+    postgres_user: postgres
+    nextcloud_service_user_basicauth: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      30363433303232323536393433663030633730656461393966363362653461653362393633363661
+      6132666165366362343735343337353337636639663564650a613231643763656562366530313637
+      35323732343735643936323937623334313035383332313432353132643334656265316562353533
+      3330353134313063640a306636343034666364336636646137353363353135316332363338303238
+      38626363633238633330393266356337663866643236376638663738396337663365326639653261
+      3332633538363938303962313165303464636361646535336637
+  tasks:
+    - name: Create directory structure
+      loop:
+        - '{{ home }}/bin'
+        - '{{ home }}/etc/docker/nextcloud'
+        - '{{ home }}/etc/nextcloud'
+        - '{{ home }}/var/log/nextcloud'
+      file:
+        path: '{{ item }}'
+        state: directory
+
+    - name: Install prerequesites for docker
+      loop: [ca-certificates, curl]
+      become: true
+      package:
+        name: '{{ item }}'
+        state: present
+
+    - name: Add Docker's official GPG key
+      become: true
+      shell: |
+        install -m 0755 -d /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+        chmod a+r /etc/apt/keyrings/docker.asc
+
+    - name: Add the repository to Apt sources
+      shell: |
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+        $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+        sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    - name: apt update
+      become: true
+      apt:
+        update_cache: true
+
+    - name: Install all packages needed for docker
+      loop: [docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
+      become: true
+      package:
+        name: '{{ item }}'
+        state: present
+
+    - name: Copy docker-compose.yml to {{ ansible_host }}
+      template:
+        src: docker-compose.yml.j2
+        dest: '{{ home }}/etc/docker/nextcloud/docker-compose.yml'
+
+    - name: Create group docker
+      become: true
+      group:
+        name: docker
+
+    - name: Add {{ user }} to group docker
+      become: true
+      user:
+        name: '{{ user }}'
+        groups: docker
+        append: true
+
+    - name: docker compose up -d
+      shell:
+        cmd: docker compose up -d
+        chdir: '{{ home }}/etc/docker/nextcloud'
+
+    - name: Remove directory {{ home }}/etc/docker/nextcloud
+      file:
+        path: '{{ home }}/etc/docker/nextcloud'
+        state: absent
+
+    - name: Install python3-docker module
+      become: true
+      package:
+        name: python3-docker
+
+    - name: Copy nextcloud scripts to target machine
+      loop: [nextcloud_backup.py, nextcloud-talk-alert.py]
+      copy:
+        src: '{{ item }}'
+        dest: '{{ home }}/bin'
+        mode: 0740
+
+    - name: Create authfile for nextcloud service_user
+      copy:
+        dest: '{{ home }}/.nextcloud-basic-auth-service_user'
+        content: '{{ nextcloud_service_user_basicauth }}'
+        mode: 0400
+
+    - name: Copy log config file for nextcloud_backup
+      copy:
+        src: nextcloud_backup.log.ini
+        dest: '{{ home }}/etc/nextcloud'
+
+    - name: integrate logrotate block into logrotate configuration
+      become: true
+      blockinfile:
+        path: /etc/logrotate.d/julian
+        block: |
+          {{ home }}/var/log/nextcloud-backup-create.log {
+            daily
+            create 0640 {{ group }} {{ user }}
+            dateext dateformat .%Y-%m-%d
+            rotate 7
+          }
+        marker: "# {mark} ANSIBLE MANAGED BLOCK nextcloud_backup"
+        create: true
+
+    - name: add nextcloud_backup create to crontab
+      cron:
+        name: 'nextcloud_backup'
+        job: '{{ home }}/bin/nextcloud_backup.py create >> {{ home }}/var/log/nextcloud/nextcloud-backup-create.log 2>&1'
+        user: '{{ user }}'
+        hour: '2'
+        minute: '0'
