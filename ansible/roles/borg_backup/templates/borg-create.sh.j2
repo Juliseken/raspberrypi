@@ -50,7 +50,7 @@ info "Pruning repository"
 
 borg prune                                  \
     --list                                  \
-    --prefix ${archive_prefix}              \
+    --glob-archives "${archive_prefix}*"    \
     --show-rc                               \
     --keep-daily    {{ borg_keep.daily }}                       \
     --keep-weekly   {{ borg_keep.weekly }}                       \
