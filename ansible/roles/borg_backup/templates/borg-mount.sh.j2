@@ -6,6 +6,5 @@ export BORG_PASSCOMMAND="{{ borg_passcommand }}"
 mountpoint={{ borg_mountpoint }}
 
 borg mount \
-  -o allow_other \
   ${BORG_REPO} \
   ${mountpoint}

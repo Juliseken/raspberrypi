@@ -5,16 +5,16 @@
   roles:
     - role: borg_backup
   vars:
-    borg_version: 1.1.15-3~bpo10+1
+    borg_version: 1.2.8-1
     borg_home: /srv/dev-disk-by-label-data/home/julian
     borg_bin_dir: '{{ borg_home }}/bin'
     borg_backup_name: local
     borg_source_directory: /srv/dev-disk-by-label-data/spiegel
     borg_repository: /srv/dev-disk-by-label-data/backup
-    borg_passcommand: "cat ${HOME}/.borg-passphrase-local"
+    borg_passcommand: "cat {{ borg_home }}/.borg-passphrase-local"
     borg_mountpoint: /srv/dev-disk-by-label-data/restore/local
     borg_archive_prefix: julian-
-    borg_alert_command: '{{ borg_home }}/bin/nextcloud-talk-alert.sh'
+    borg_alert_command: 'echo'
     borg_keep:
       daily: 7
       weekly: 2
@@ -31,16 +31,16 @@
   roles:
     - role: borg_backup
   vars:
-    borg_version: 1.1.15-3~bpo10+1
+    borg_version: 1.2.8-1
     borg_home: /srv/dev-disk-by-label-data/home/julian
     borg_bin_dir: '{{ borg_home }}/bin'
     borg_backup_name: offshore
     borg_source_directory: /srv/dev-disk-by-label-data/spiegel
     borg_repository: /srv/43010960-b7dc-40e0-9edc-9cb94c483ade/Elements/backup
-    borg_passcommand: "cat ${HOME}/.borg-passphrase-offshore"
+    borg_passcommand: "cat {{ borg_home }}/.borg-passphrase-offshore"
     borg_mountpoint: /srv/dev-disk-by-label-data/restore/offshore
     borg_archive_prefix: julian-
-    borg_alert_command: '{{ borg_home }}/bin/nextcloud-talk-alert.sh'
+    borg_alert_command: 'echo'
     borg_keep:
       daily: 0
       weekly: 2

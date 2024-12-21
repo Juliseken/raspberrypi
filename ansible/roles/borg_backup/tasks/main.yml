@@ -7,6 +7,12 @@
     name: borgbackup={{ borg_version }}
     state: present
 
+- name: install python3-pyfuse3
+  become: true
+  package:
+    name: python3-pyfuse3
+    state: present
+
 - name: copy borg scripts to {{ borg_bin_dir }} target machine
   template:
     src: '{{ role_path }}/templates/{{ item.script }}.sh.j2'
