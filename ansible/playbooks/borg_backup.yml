@@ -14,7 +14,7 @@
     borg_passcommand: "cat {{ borg_home }}/.borg-passphrase-local"
     borg_mountpoint: /srv/dev-disk-by-label-data/restore/local
     borg_archive_prefix: julian-
-    borg_alert_command: 'echo'
+    borg_alert_command: '/srv/dev-disk-by-label-data/home/julian/bin/nextcloud-talk-alert.py'
     borg_keep:
       daily: 7
       weekly: 2
@@ -40,7 +40,7 @@
     borg_passcommand: "cat {{ borg_home }}/.borg-passphrase-offshore"
     borg_mountpoint: /srv/dev-disk-by-label-data/restore/offshore
     borg_archive_prefix: julian-
-    borg_alert_command: 'echo'
+    borg_alert_command: '/srv/dev-disk-by-label-data/home/julian/bin/nextcloud-talk-alert.py'
     borg_keep:
       daily: 0
       weekly: 2
