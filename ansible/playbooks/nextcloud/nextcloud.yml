@@ -4,6 +4,7 @@
   hosts: raspberrypi
   vars:
     user: julian
+    group: julian
     nextcloud_admin_password: !vault |
       $ANSIBLE_VAULT;1.1;AES256
       31393637333732616163363134616564383131343430323232663430306430323138353566353362
@@ -21,6 +22,14 @@
       3430643532613332320a376662306362376633613138326631646133333931383165626237326234
       31343931646334656462316661623762643232353265633761333737353735383731
     postgres_user: postgres
+    nextcloud_service_user_basicauth: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      30363433303232323536393433663030633730656461393966363362653461653362393633363661
+      6132666165366362343735343337353337636639663564650a613231643763656562366530313637
+      35323732343735643936323937623334313035383332313432353132643334656265316562353533
+      3330353134313063640a306636343034666364336636646137353363353135316332363338303238
+      38626363633238633330393266356337663866643236376638663738396337663365326639653261
+      3332633538363938303962313165303464636361646535336637
   tasks:
     - name: Install prerequesites for docker
       loop: [ca-certificates, curl]
@@ -85,3 +94,47 @@
       file:
         path: ~/nextcloud
         state: absent
+
+    - name: Install python3-docker module
+      become: true
+      package:
+        name: python3-docker
+
+    - name: Copy nextcloud scripts to target machine
+      loop: [nextcloud_backup.py, nextcloud-talk-alert.py]
+      copy:
+        src: '{{ item }}'
+        dest: /srv/dev-disk-by-label-data/home/julian/bin
+
+    - name: Create authfile for nextcloud service_user
+      copy:
+        dest: /srv/dev-disk-by-label-data/home/julian/.nextcloud-basic-auth-service_user
+        content: '{{ nextcloud_service_user_basicauth }}'
+        mode: 0400
+
+    - name: Copy log config file for nextcloud_backup
+      copy:
+        src: nextcloud_backup.log.ini
+        dest: /srv/dev-disk-by-label-data/home/julian/etc/nextcloud
+
+    - name: integrate logrotate block into logrotate configuration
+      become: true
+      blockinfile:
+        path: /etc/logrotate.d/julian
+        block: |
+          /srv/dev-disk-by-label-data/home/julian/var/log/nextcloud-backup-create.log {
+            daily
+            create 0640 {{ group }} {{ user }}
+            dateext dateformat .%Y-%m-%d
+            rotate 7
+          }
+        marker: "# {mark} ANSIBLE MANAGED BLOCK nextcloud_backup"
+        create: true
+
+    - name: add nextcloud_backup create to crontab
+      cron:
+        name: 'nextcloud_backup'
+        job: '/srv/dev-disk-by-label-data/home/julian/bin/nextcloud_backup.py create >> /srv/dev-disk-by-label-data/home/julian/var/log/nextcloud-backup-create.log 2>&1'
+        user: '{{ user }}'
+        hour: '2'
+        minute: '0'
