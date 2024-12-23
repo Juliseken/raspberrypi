@@ -6,20 +6,29 @@
     - role: borg_backup
   vars:
     borg_version: 1.2.8-1
-    borg_home: /srv/dev-disk-by-label-data/home/julian
+    borg_home: /home/julian
     borg_bin_dir: '{{ borg_home }}/bin'
     borg_backup_name: local
     borg_source_directory: /srv/dev-disk-by-label-data/spiegel
     borg_repository: /srv/dev-disk-by-label-data/backup
-    borg_passcommand: "cat {{ borg_home }}/.borg-passphrase-local"
+    borg_passphrase: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      61346134313839643333643532393137643230393330613566373263336263656230386337623030
+      3239306636653534306532333539323631363861393434640a656130303535356137386233346632
+      31663262346230333366663666616166613338306135333865643035333464363262373864623865
+      6461356137346461660a346336633737656632613039363031366464656234363566666261663764
+      3362
+    borg_passphrase_file: '{{ borg_home }}/.borg-passphrase-local'
+    borg_passcommand: "cat {{ borg_passphrase_file }}"
     borg_mountpoint: /srv/dev-disk-by-label-data/restore/local
     borg_archive_prefix: julian-
-    borg_alert_command: 'echo'
+    borg_alert_command: '{{ borg_home }}/bin/nextcloud-talk-alert.py'
     borg_keep:
       daily: 7
       weekly: 2
       monthly: 2
-    borg_create_log_file: '{{ borg_home }}/var/log/borg/borg-create-{{ borg_backup_name }}.log'
+    borg_log_dir: '{{ borg_home }}/var/log/borg'
+    borg_create_log_file: '{{ borg_log_dir }}/borg-create-{{ borg_backup_name }}.log'
     borg_create_logrotate_file: /etc/logrotate.d/julian
     borg_user_id: julian
     borg_group_id: julian
@@ -32,20 +41,29 @@
     - role: borg_backup
   vars:
     borg_version: 1.2.8-1
-    borg_home: /srv/dev-disk-by-label-data/home/julian
+    borg_home: /home/julian
     borg_bin_dir: '{{ borg_home }}/bin'
     borg_backup_name: offshore
     borg_source_directory: /srv/dev-disk-by-label-data/spiegel
     borg_repository: /srv/43010960-b7dc-40e0-9edc-9cb94c483ade/Elements/backup
-    borg_passcommand: "cat {{ borg_home }}/.borg-passphrase-offshore"
+    borg_passphrase: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      63316335393465353731393036626461613134366663646335313965666436653334313763326238
+      3936626132373732333464353862356531643531336633310a623035646535383564373262633336
+      61663336663037666430343634623439373061353734376536396365656165663235666639303938
+      3563343930636164650a303931623366656234643234623833326632366561643436313366396661
+      3764
+    borg_passphrase_file: '{{ borg_home }}/.borg-passphrase-offshore'
+    borg_passcommand: "cat {{ borg_passphrase_file }}"
     borg_mountpoint: /srv/dev-disk-by-label-data/restore/offshore
     borg_archive_prefix: julian-
-    borg_alert_command: 'echo'
+    borg_alert_command: '{{ borg_home }}/bin/nextcloud-talk-alert.py'
     borg_keep:
       daily: 0
       weekly: 2
       monthly: 0
-    borg_create_log_file: '{{ borg_home }}/var/log/borg/borg-create-{{ borg_backup_name }}.log'
+    borg_log_dir: '{{ borg_home }}/var/log/borg'
+    borg_create_log_file: '{{ borg_log_dir }}/borg-create-{{ borg_backup_name }}.log'
     borg_create_logrotate_file: /etc/logrotate.d/julian
     borg_user_id: julian
     borg_group_id: julian

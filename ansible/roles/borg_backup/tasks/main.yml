@@ -13,6 +13,20 @@
     name: python3-pyfuse3
     state: present
 
+- name: Create directory structure
+  loop:
+    - '{{ borg_bin_dir }}'
+    - '{{ borg_log_dir }}'
+  file:
+    path: '{{ item }}'
+    state: directory
+
+- name: Create {{ borg_passphrase_file }}
+  copy:
+    dest: '{{ borg_passphrase_file }}'
+    content: '{{ borg_passphrase }}'
+    mode: 0400
+
 - name: copy borg scripts to {{ borg_bin_dir }} target machine
   template:
     src: '{{ role_path }}/templates/{{ item.script }}.sh.j2'
