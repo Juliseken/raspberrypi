@@ -4,15 +4,28 @@
   roles:
      - role: mirror_share
   vars:
-    mirror_share_home: /srv/dev-disk-by-label-data/home/julian
+    mirror_share_home: /home/julian
     mirror_share_bin_directory: '{{ mirror_share_home }}/bin'
     mirror_share_interfaces: '192.168.188.39 192.168.188.37'
     mirror_share_name: home
     mirror_share_mountpoint: /mnt/julian-pc/Home
     mirror_share_credentials_file: '{{ mirror_share_home }}/.cifscredentials-julian-pc-home'
+    mirror_share_credentials: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      32346132613630613239363337333433653561633066396434623036326437623831336437333732
+      3135343762373033346265353837663139646230343232370a316534366335316365643562393330
+      39373831366138366532383734343030336531663465323035343437623663613032303233333235
+      3330313432633834630a636261336333386263663632386632633662343438313265363034333463
+      65383837363466393637313262373064303636346635663431316137373335613634623930363139
+      6434356462636262303230386362353764623335633936323137
     mirror_share_destination: /srv/dev-disk-by-label-data/spiegel/julian-pc
     mirror_share_user_id: julian
     mirror_share_group_id: julian
-    mirror_share_alert_command: '{{ mirror_share_home }}/bin/nextcloud-talk-alert.sh'
-    mirror_share_log_file: '{{ mirror_share_home }}/var/log/mirror-share-if-available/mirror-share-if-available.log'
+    mirror_share_alert_command: '{{ mirror_share_home }}/bin/nextcloud-talk-alert.py'
+    mirror_share_log_directory: '{{ mirror_share_home }}/var/log/mirror-share-if-available'
+    mirror_share_log_file: '{{ mirror_share_log_directory }}/mirror-share-if-available.log'
     mirror_share_logrotate_file: /etc/logrotate.d/julian
+    mirror_share_lib_directory: '{{ mirror_share_home }}/var/lib/mirror_share'
+    mirror_share_pid_file: '{{ mirror_share_lib_directory }}/PID'
+    mirror_share_last_mirror_status_file: '{{ mirror_share_lib_directory }}/last_mirror_status.status'
+    mirror_share_alert_fired_file: '{{ mirror_share_lib_directory }}/alert_fired.status'

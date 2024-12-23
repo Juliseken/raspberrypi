@@ -1,9 +1,8 @@
 #!/bin/bash
 
 # general script config
-package_name=mirror-share-if-available
 HOME={{ mirror_share_home }}
-pid_file="${HOME}/var/lib/${package_name}/PID"
+pid_file={{ mirror_share_pid_file }}
 
 # share config
 interfaces="{{ mirror_share_interfaces }}"
@@ -20,13 +19,13 @@ options="--archive --verbose --delete" #archive and verbose - see rsync help for
 mount_options=_netdev,iocharset=utf8,vers=3.0,nofail,uid={{ mirror_share_user_id }},gid={{ mirror_share_group_id }},file_mode=0770,dir_mode=0770,credentials=${credentialsFile}
 
 # mirror interval config
-last_mirror_status_file="${HOME}/var/lib/${package_name}/last_mirror_status.status"
+last_mirror_status_file={{ mirror_share_last_mirror_status_file }}
 mirror_interval_minutes=60
 
 # if the last succesful mirror is older then mirror_age_alert_days fire an alert
 mirror_age_alert_days=7
 mirror_age_alert_minutes=$((${mirror_age_alert_days} * 24 * 60))
-alert_fired_file="${HOME}/var/lib/${package_name}/alert_fired.status"
+alert_fired_file={{ mirror_share_alert_fired_file }}
 
 # utility functions
 function log {

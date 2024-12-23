@@ -1,6 +1,23 @@
 ---
 # tasks file for mirror_share
 
+- name: Create directory structure
+  loop:
+    - '{{ mirror_share_bin_directory }}'
+    - '{{ mirror_share_mountpoint }}'
+    - '{{ mirror_share_log_directory }}'
+    - '{{ mirror_share_destination }}'
+    - '{{ mirror_share_lib_directory }}'
+  file:
+    path: '{{ item }}'
+    state: directory
+
+- name: Create {{ mirror_share_credentials_file }}
+  copy:
+    dest: '{{ mirror_share_credentials_file }}'
+    content: '{{ mirror_share_credentials }}'
+    mode: 0400
+
 - name: copy mirror-share-if-available.sh to {{ mirror_share_bin_directory }}
   template:
     src: '{{ role_path }}/templates/mirror-share-if-available.sh.j2'
