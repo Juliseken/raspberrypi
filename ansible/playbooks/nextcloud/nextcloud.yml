@@ -101,7 +101,7 @@
       blockinfile:
         path: '{{ nextcloud_logrotate_file }}'
         block: |
-          {{ home }}/var/log/nextcloud-backup-create.log {
+          {{ home }}/var/log/nextcloud/nextcloud-backup-create.log {
             daily
             create 0640 {{ group }} {{ user }}
             dateext dateformat .%Y-%m-%d
