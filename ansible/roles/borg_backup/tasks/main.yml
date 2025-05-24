@@ -63,3 +63,13 @@
     user: '{{ borg_user_id }}'
     hour: '{{ borg_backup_create_hour }}'
     minute: '{{ borg_backup_create_minute }}'
+
+- name: Set user_allow_other in /etc/fuse.conf to be able to access the mounted backup from a samba share
+  lineinfile:
+    path: /etc/fuse.conf
+    regexp: '^#?\s*user_allow_other'
+    line: 'user_allow_other'
+    state: present
+    create: yes
+    mode: '0644'
+  become: true
