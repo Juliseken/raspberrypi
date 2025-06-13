@@ -1,0 +1,22 @@
+---
+
+- name: Basic provisioning
+  hosts: raspberrypi
+  vars_files: ../vars/provision-basic
+  tasks:
+    - name: Add repo ppa:tomtomtom/yt-dlp
+      become: true
+      apt_repository:
+        repo: ppa:tomtomtom/yt-dlp
+        state: present
+
+    - name: apt update
+      become: true
+      apt:
+        update_cache: true
+
+    - name: Install yt-dlp
+      become: true
+      apt:
+        name: yt-dlp
+        state: present
