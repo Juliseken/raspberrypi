@@ -1,0 +1,77 @@
+---
+- name: Install and configure MiniDLNA on Ubuntu
+  hosts: raspberrypi
+  become: yes
+  vars:
+    media_dir: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      63356664653934613564306131613665636431386466336263653635623163393332636565363465
+      6237336163393530363932663966306662366536653061650a643330323534663435623332316230
+      34646436613766303939373930656535663462366165366538643632356661396263346566623537
+      3231343730616135360a616636333439316265633765313135313538376237633639656134393865
+      63393062333536343834636361333037633833643563363131333035393066623238366533363163
+      3863636361363964376336636634383862656166353434363533
+    friendly_name: "RaspberryPi Media Server"
+    minidlna_conf: "/etc/minidlna.conf"
+    user: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      37323237353032613137303638323933353562643334383233666439336131643139323534396562
+      3431393335343464376538366239333239303231623963350a393831656461666136623837346462
+      62643538643337383830303132333933353532636363363432343033386132323266336462346633
+      6537663338363461390a316137366133353836633130393063353061663335613735376435383335
+      6134
+
+  tasks:
+    - name: Ensure MiniDLNA is installed
+      apt:
+        name: minidlna
+        state: present
+        update_cache: yes
+
+    - name: Backup existing MiniDLNA configuration if it exists
+      copy:
+        src: "{{ minidlna_conf }}"
+        dest: "{{ minidlna_conf }}.bak"
+        remote_src: yes
+      when: ansible_facts['os_family'] == "Debian" and ansible_facts['distribution'] == "Ubuntu"
+      ignore_errors: yes
+
+    - name: Configure MiniDLNA
+      lineinfile:
+        path: "{{ minidlna_conf }}"
+        regexp: '^{{ item.key }}='
+        line: "{{ item.key }}={{ item.value }}"
+        create: yes
+      loop:
+        - { key: 'media_dir', value: "V,{{ media_dir }}" }
+        - { key: 'friendly_name', value: "{{ friendly_name }}" }
+        - { key: 'inotify', value: 'yes' }
+        - { key: 'port', value: '8200' }
+        - { key: 'user', value: "{{ user }}" }
+        - { key: 'db_dir', value: '/var/cache/minidlna' }
+        - { key: 'log_dir', value: '/var/log' }
+
+    - name: Ensure MiniDLNA service is enabled and started
+      systemd:
+        name: minidlna
+        enabled: yes
+        state: restarted
+
+    - name: Force MiniDLNA to rescan the media library (optional)
+      command: minidlnad -R
+      register: rescan_result
+      changed_when: "'rescan started' in rescan_result.stdout or rescan_result.rc == 0"
+
+    - name: Display MiniDLNA status
+      systemd:
+        name: minidlna
+        state: started
+      register: service_status
+
+    - name: Print status summary
+      debug:
+        msg:
+          - "MiniDLNA service is {{ 'active' if service_status.status.ActiveState == 'active' else 'inactive' }}"
+          - "Media directory: {{ media_dir }}"
+          - "Server name: {{ friendly_name }}"
+          - "Access from your TV at: Source → Media Server → {{ friendly_name }}"
