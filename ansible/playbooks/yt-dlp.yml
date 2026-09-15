@@ -1,8 +1,7 @@
 ---
 
-- name: Basic provisioning
+- name: Install yt-dlp
   hosts: raspberrypi
-  vars_files: ../vars/provision-basic
   tasks:
     - name: Add repo ppa:tomtomtom/yt-dlp
       become: true
@@ -15,8 +14,9 @@
       apt:
         update_cache: true
 
-    - name: Install yt-dlp
+    - name: Install or upgrade yt-dlp
       become: true
       apt:
         name: yt-dlp
-        state: present
+        state: latest
+        update_cache: true
