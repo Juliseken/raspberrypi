@@ -2,21 +2,23 @@
 
 - name: Install yt-dlp
   hosts: raspberrypi
+  become: true
+
   tasks:
-    - name: Add repo ppa:tomtomtom/yt-dlp
-      become: true
-      apt_repository:
-        repo: ppa:tomtomtom/yt-dlp
-        state: present
 
-    - name: apt update
-      become: true
-      apt:
-        update_cache: true
+    - name: Download latest yt-dlp
+      ansible.builtin.get_url:
+        url: https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
+        dest: /usr/local/bin/yt-dlp
+        mode: '0755'
+        force: true
 
-    - name: Install or upgrade yt-dlp
-      become: true
-      apt:
-        name: yt-dlp
-        state: latest
-        update_cache: true
+    - name: Check yt-dlp version
+      ansible.builtin.command:
+        cmd: /usr/local/bin/yt-dlp --version
+      register: yt_dlp_version
+      changed_when: false
+
+    - name: Display yt-dlp version
+      ansible.builtin.debug:
+        msg: "Installed yt-dlp version: {{ yt_dlp_version.stdout }}"
